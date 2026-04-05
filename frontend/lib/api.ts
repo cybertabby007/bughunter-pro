@@ -1,5 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-const WS_BASE  = API_BASE.replace(/^http/, "ws");
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
 export async function startScan(domain: string): Promise<{ scan_id: string; domain: string }> {
   const res = await fetch(`${API_BASE}/scan`, {
@@ -22,5 +21,14 @@ export function getReportUrl(scanId: string): string {
 }
 
 export function createWebSocket(scanId: string): WebSocket {
-  return new WebSocket(`${WS_BASE}/ws/${scanId}`);
+  let wsBase: string;
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    wsBase = process.env.NEXT_PUBLIC_API_URL.replace(/^http/, "ws");
+  } else if (typeof window !== "undefined") {
+    const proto = window.location.protocol === "https:" ? "wss" : "ws";
+    wsBase = `${proto}://${window.location.host}`;
+  } else {
+    wsBase = "ws://localhost:8000";
+  }
+  return new WebSocket(`${wsBase}/ws/${scanId}`);
 }

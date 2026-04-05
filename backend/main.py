@@ -9,9 +9,12 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
+import os
+
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
+from fastapi.staticfiles import StaticFiles
 
 from scanner import cors as cors_mod
 from scanner import headers as headers_mod
@@ -267,6 +270,13 @@ async def _ws_send(ws: WebSocket, event_type: str, data: Any):
         pass
 
 
+# ── Serve Next.js static export (must be mounted last) ───────────────────────
+_static_dir = os.path.join(os.path.dirname(__file__), "static")
+if os.path.exists(_static_dir):
+    app.mount("/", StaticFiles(directory=_static_dir, html=True), name="frontend")
+
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
